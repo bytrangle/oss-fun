@@ -6,7 +6,7 @@ const express = require('express');
 require('./redis-client');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Import route modules
 const indexRoutes = require('./routes/index');
