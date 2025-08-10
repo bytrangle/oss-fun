@@ -54,11 +54,25 @@ router.get('/event-stream', async (req, res) => {
         }
       }
       
+      // Extract action from payload field
+      let action = null;
+      if (eventData.payload) {
+        try {
+          const payloadObj = JSON.parse(eventData.payload);
+          action = payloadObj.action;
+        } catch (e) {
+          // If payload is not JSON, try to extract action directly
+          const actionMatch = eventData.payload.match(/"action":\s*"([^"]+)"/);
+          action = actionMatch ? actionMatch[1] : null;
+        }
+      }
+      
       // Construct new object with required fields
       const processedEvent = {
         repo_name: repoName,
         actor_login: actorLogin,
-        type: eventData.type || null
+        type: eventData.type || null,
+        action: action
       };
       
       // Push to the new array
