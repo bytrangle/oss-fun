@@ -1,14 +1,23 @@
 const express = require('express');
+
+// Force Redis connection to be established at server startup.
+// It's not strictly required, but it's helpful to know immediately
+// if Redis is down, not when a user hits an endpoint.
+require('./redis-client');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Import route modules
+const indexRoutes = require('./routes/index');
+const eventRoutes = require('./routes/events');
 
 // Middleware
 app.use(express.json());
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({ root: true });
-});
+// Use route modules
+app.use('/', indexRoutes);
+app.use('/', eventRoutes);
 
 // Start server
 app.listen(PORT, () => {
