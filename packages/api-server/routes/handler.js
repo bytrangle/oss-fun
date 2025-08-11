@@ -72,7 +72,8 @@ router.get('/event-stream', async (req, res) => {
         repo_name: repoName,
         actor_login: actorLogin,
         type: eventData.type || null,
-        action: action
+        action: action,
+        id: eventData.id || null
       };
       
       // Push to the new array
@@ -92,6 +93,60 @@ router.get('/event-stream', async (req, res) => {
     res.status(500).json({ 
       message: 'error', 
       error: error.message 
+    });
+  }
+});
+
+// Active contributors endpoint
+router.get('/active-contributors', async (req, res) => {
+  try {
+    // Get the 'since' query parameter, default to 'today'
+    const since = req.query.since || 'today';
+    
+    // Convert 'today' to ISO format string
+    let dateKey;
+    if (since === 'today') {
+      dateKey = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    } else {
+      dateKey = since; // Assume it's already in the correct format
+    }
+    
+    // Construct the Redis key
+    const contributorScoreKey = `github-events:contributor-score:${dateKey}:sum`;
+    
+    console.log(`Reading top contributors from Redis key: ${contributorScoreKey}`);
+    
+    // Get top 20 contributors ordered by score (highest to lowest)
+    const contributors = await redis.zrevrange(contributorScoreKey, 0, 19, 'WITHSCORES');
+    
+    // Convert the flat array to array of objects
+    const contributorData = [];
+    for (let i = 0; i < contributors.length; i += 2) {
+      contributorData.push({
+        contributor: contributors[i],
+        score: parseInt(contributors[i + 1])
+      });
+    }
+    
+    // Check if response is empty
+    if (contributorData.length === 0) {
+      return res.json({
+        message: "It's the wee hours. Let's get going.",
+        data: []
+      });
+    }
+    
+    // Return successful response with data
+    res.json({
+      message: 'success',
+      data: contributorData
+    });
+    
+  } catch (error) {
+    console.error('Error reading contributors from Redis:', error);
+    res.status(500).json({
+      message: 'error',
+      error: error.message
     });
   }
 });
