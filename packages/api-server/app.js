@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 4000;
 
 // Import route modules
 const indexRoutes = require('./routes/index');
-const eventRoutes = require('./routes/events');
+const eventRoutes = require('./routes/handler');
 
 // Middleware
 app.use(express.json());
